@@ -90,6 +90,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlsplit(self.path)
         route = parsed.path.rstrip('/') or '/'
+        runner.mark_user_activity()
         try:
             if route == '/':
                 self._home()

@@ -42,7 +42,7 @@ def _save_cache():
 
 def _probe(site):
     from bridge import runner
-    result = runner.call_site(site, 'load')
+    result = runner.call_site(site, 'load', background=True)
     # un site qui ne produit aucune entree est considere mort
     return bool(result.get('ok')) and bool(result.get('items'))
 

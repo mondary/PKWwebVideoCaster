@@ -283,6 +283,12 @@ class ResolveError(Exception):
 
 def resolve_media(hosterIdentifier, mediaUrl, fileName='', title=''):
     """Portage headless de cHosterGui.play() : renvoie 'url[|Headers]'."""
+    from bridge.runner import argv_lock
+    with argv_lock:  # les hébergeurs lisent sys.argv via leurs helpers
+        return _resolve_media(hosterIdentifier, mediaUrl, fileName, title)
+
+
+def _resolve_media(hosterIdentifier, mediaUrl, fileName='', title=''):
     oHosterGui = cHosterGui()
     sFileName = fileName or title or ''
 

@@ -143,6 +143,24 @@ img{display:block}
       animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ---------- rows (liens hebergeurs, menus sans vignette) ---------- */
+.grid .row{grid-column:1/-1;display:flex;align-items:center;gap:12px;
+      min-height:54px;padding:12px 16px;border-radius:13px;
+      background:linear-gradient(135deg,var(--card),var(--card2));
+      border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.25);
+      transition:transform .15s ease,border-color .15s ease}
+.grid .row:active{transform:scale(.985);border-color:var(--acc)}
+.grid .row .lbl{flex:1;min-width:0;font-weight:600;font-size:.95rem;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid .row .ic{flex:none;width:34px;height:34px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(59,130,246,.14);color:var(--acc2);font-size:.95rem}
+.grid .row .st{flex:none;font-size:.66rem;font-weight:800;letter-spacing:.05em;
+      text-transform:uppercase;background:var(--card2);
+      border:1px solid var(--line);border-radius:8px;padding:3px 8px;
+      color:#bcd3f0}
+.grid .row.muted{opacity:.8}
+
 /* ---------- list (play links) ---------- */
 .list{list-style:none;margin:0;padding:4px 16px 18px;display:flex;flex-direction:column;gap:8px}
 .list a{display:flex;gap:10px;align-items:center;min-height:52px;padding:12px 14px;
@@ -250,9 +268,22 @@ def _card(href, label, thumb, sub='', badge=''):
             % (cls, esc(href), _placeholder(label), img, esc(label), sub_html))
 
 
+def _row(href, label, badge='', icon='&#8250;', muted=False):
+    """Rangée pleine largeur pour les items sans vignette (menus, liens)."""
+    cls = 'row' + (' muted' if muted else '')
+    st = '<span class="st">%s</span>' % esc(badge) if badge else ''
+    ic = '' if muted else '<span class="ic">%s</span>' % icon
+    tag = 'a' if not muted else 'div'
+    return ('<%s class="%s" href="%s">%s<span class="lbl">%s</span>%s</%s>'
+            % (tag, cls, esc(href) if not muted else '', ic, esc(label), st, tag))
+
+
 def render_items(base_path, data, site, back=None, next_url=None,
                  with_script=True):
     """data: runner.call_site result -> poster grid HTML.
+
+    Items avec vignette -> carte poster ; sans vignette (menus, liens
+    hébergeurs) -> rangée compacte pleine largeur.
 
     next_url: URL of the following page; when set, an infinite-scroll
     sentinel is appended (plus the loader script unless with_script=False,
@@ -266,10 +297,12 @@ def render_items(base_path, data, site, back=None, next_url=None,
     out.append('<div class="grid">')
     for it in data['items']:
         kind = it.get('kind')
+        thumb = it.get('thumb') or ''
+        if not (thumb.startswith('http://') or thumb.startswith('https://')
+                or thumb.startswith('/')):
+            thumb = ''  # icône de skin Kodi, pas une affiche utilisable
         if kind == 'text':
-            label = it.get('label') or ''
-            out.append('<div class="card txt"><div class="ph">%s</div></div>'
-                       % esc(label))
+            out.append(_row('', it.get('label') or '', icon='', muted=True))
             continue
         if kind == 'play':
             play_params = {
@@ -282,8 +315,13 @@ def render_items(base_path, data, site, back=None, next_url=None,
                 play_params['back'] = back
             qs = urllib.parse.urlencode(play_params, doseq=True)
             label = it.get('title') or it.get('file') or 'Lecture'
-            out.append(_card('%s/play?%s' % (base_path, qs), label,
-                             it.get('thumb'), sub=it.get('hoster', '')))
+            hoster = it.get('hoster', '')
+            if thumb:
+                out.append(_card('%s/play?%s' % (base_path, qs), label,
+                                 thumb, sub=hoster))
+            else:
+                out.append(_row('%s/play?%s' % (base_path, qs), label,
+                                badge=hoster, icon='&#9654;'))
             continue
         # Preserve the page containing this directory item. WVC can omit the
         # Referer header when it opens a playback page.
@@ -297,7 +335,10 @@ def render_items(base_path, data, site, back=None, next_url=None,
         if qs:
             href += '&' + qs
         badge = {'episode': 'EP', 'season': 'SAISON', 'next': 'SUIVANT'}.get(kind, '')
-        out.append(_card(href, it.get('label'), it.get('thumb'), badge=badge))
+        if thumb:
+            out.append(_card(href, it.get('label'), thumb, badge=badge))
+        else:
+            out.append(_row(href, it.get('label'), badge=badge))
     out.append('</div>')
     if next_url:
         out.append('<div class="sentinel" data-url="%s"><span class="spin">'
