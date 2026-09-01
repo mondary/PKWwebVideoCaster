@@ -40,22 +40,28 @@ img{display:block}
 
 /* ---------- hero ---------- */
 .hero{position:relative;padding:36px 20px 32px;overflow:hidden;
-      background:radial-gradient(1100px 380px at 85% -20%,rgba(59,130,246,.30),transparent 60%),
-                 radial-gradient(800px 320px at -10% 110%,rgba(34,211,238,.18),transparent 55%),
-                 linear-gradient(160deg,#0e1a33 0%,#0a0e17 70%)}
-.hero::before{content:'';position:absolute;inset:0;
+      background:linear-gradient(160deg,#0e1a33 0%,#0a0e17 70%)}
+.hero::before{content:'';position:absolute;inset:-40%;
+      background:
+        radial-gradient(38% 42% at 68% 28%,rgba(59,130,246,.32),transparent 70%),
+        radial-gradient(30% 36% at 26% 68%,rgba(34,211,238,.20),transparent 70%),
+        radial-gradient(26% 30% at 80% 74%,rgba(124,58,237,.16),transparent 70%);
+      animation:aurora 16s ease-in-out infinite alternate;
+      filter:blur(6px)}
+.hero::after{content:'';position:absolute;inset:0;
       background-image:radial-gradient(circle,rgba(255,255,255,.055) 1px,transparent 1px);
       background-size:22px 22px;
-      mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 85%);
-      -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 85%)}
-.hero::after{content:'';position:absolute;inset:auto 0 0 0;height:70px;
+      mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 85%);-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 85%)}
+.hero .fade{position:absolute;inset:auto 0 0 0;height:70px;
              background:linear-gradient(180deg,transparent,var(--bg));pointer-events:none}
 .hero>*{position:relative;z-index:1}
 .hero .brand{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;
-             background:linear-gradient(92deg,#fff 20%,#7ab8ff 70%,#22d3ee 105%);
-             -webkit-background-clip:text;background-clip:text;
-             -webkit-text-fill-color:transparent;color:transparent}
+             background:linear-gradient(92deg,#fff 20%,#7ab8ff 70%,#22d3ee 105%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .hero p{margin:6px 0 18px;color:var(--muted);font-size:.9rem}
+@keyframes aurora{
+  0%{transform:translate3d(-4%,-3%,0) scale(1) rotate(0deg)}
+  50%{transform:translate3d(3%,2%,0) scale(1.08) rotate(2deg)}
+  100%{transform:translate3d(-2%,4%,0) scale(1.04) rotate(-2deg)}}
 
 /* ---------- search ---------- */
 .search{display:flex;gap:8px;padding:2px 16px 6px;margin-top:-14px;z-index:2;position:relative}
@@ -80,18 +86,23 @@ img{display:block}
          margin:16px 0 8px;padding:0 16px;font-size:.78rem;font-weight:800;
          letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .section a{font-size:.72rem;letter-spacing:.05em;color:var(--acc2);font-weight:700}
-
-/* ---------- animated gradient border (Magic UI style) ---------- */
+/* ---------- border beam (Aceternity style) ---------- */
 .gborder{position:relative;border-radius:16px;padding:1.5px;
-         background:conic-gradient(from var(--ga),#1d4ed8,var(--acc2),#7c3aed,#1d4ed8);
-         animation:gaspn 5s linear infinite;
+         background:linear-gradient(135deg,#16223c,#0d1526);
          box-shadow:0 8px 26px rgba(37,99,235,.28)}
+.gborder::before{content:'';position:absolute;inset:0;border-radius:inherit;
+         padding:1.5px;
+         background:conic-gradient(from var(--ga),transparent 0 68%,
+                    rgba(96,165,250,.95) 80%,rgba(34,211,238,.9) 85%,transparent 92%);
+         mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+         mask-composite:exclude;-webkit-mask-composite:xor;
+         animation:gaspn 3.4s linear infinite}
 @keyframes gaspn{to{--ga:360deg}}
 .gborder>a{display:flex;align-items:center;min-height:48px;padding:0 18px;
            border-radius:15px;font-weight:700;font-size:.95rem;
            background:linear-gradient(135deg,#0d1a33,#0a0e17);
            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (prefers-reduced-motion:reduce){.gborder{animation:none}}
+@media (prefers-reduced-motion:reduce){.gborder::before,.hero::before{animation:none}}
 
 /* ---------- rails / source chips ---------- */
 .rail{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 8px;
@@ -111,17 +122,21 @@ img{display:block}
 .chip .st.ok{color:var(--ok)}
 .chip .st.ko{color:var(--ko);background:rgba(255,107,100,.12);
              padding:2px 7px;border-radius:7px}
-.chip .st.wait{color:var(--muted)}
-.chip.down{opacity:.5}
-
-/* ---------- poster grid ---------- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
       gap:12px;padding:12px 16px 10px}
 .card{position:relative;display:block;border-radius:14px;overflow:hidden;
       background:var(--card);border:1px solid var(--line);
       box-shadow:0 8px 22px rgba(0,0,0,.38);
-      transition:transform .18s ease,box-shadow .18s ease}
+      transition:transform .18s ease,box-shadow .18s ease;
+      animation:enter .5s cubic-bezier(.2,.7,.3,1) both;
+      animation-delay:calc(min(var(--i,0),10)*35ms)}
+.card::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;
+      transition:opacity .35s ease;
+      background:radial-gradient(230px circle at var(--mx,50%) var(--my,50%),
+                 rgba(96,165,250,.20),transparent 65%)}
+@media (hover:hover){.card:hover::after{opacity:1}}
 .card:active{transform:translateY(-2px) scale(.98)}
+@keyframes enter{from{opacity:0;transform:translateY(14px) scale(.97)}}
 .card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
       background:var(--card2)}
 .card .ph{display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;
@@ -196,6 +211,18 @@ if(ns){s.dataset.url=ns.dataset.url;io.observe(s);}else{s.remove();}});});
 """
 
 
+_SPOTLIGHT_JS = """
+<script>(function(){var d=document,l=null,r=null;
+d.addEventListener('pointerover',function(e){
+l=e.target&&e.target.closest?e.target.closest('.card'):null;},{passive:true});
+d.addEventListener('pointermove',function(e){if(!l)return;
+if(r)return;r=requestAnimationFrame(function(){r=0;if(!l)return;
+var b=l.getBoundingClientRect();
+l.style.setProperty('--mx',(e.clientX-b.left)+'px');
+l.style.setProperty('--my',(e.clientY-b.top)+'px');});},{passive:true});})();</script>
+"""
+
+
 def esc(s):
     return html.escape(str(s if s is not None else ''), quote=True)
 
@@ -212,14 +239,15 @@ def page(title, body, back=None, hero=False, no_nav=False):
     return ('<!doctype html><html lang="fr"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1,'
             'viewport-fit=cover">'
-            '<title>%s</title><style>%s</style></head><body>%s%s'
+            '<title>%s</title><style>%s</style></head><body>%s%s%s'
             '<p class="footer">PKWwebVideoCaster &#183; bridge vStream &#8594; '
             'Web Video Caster</p></body></html>'
-            ) % (esc(title), BASE_CSS, nav, body)
+            ) % (esc(title), BASE_CSS, nav, body, _SPOTLIGHT_JS)
 
 
 def hero(title, subtitle):
-    return ('<div class="hero"><div class="brand">%s</div><p>%s</p></div>'
+    return ('<div class="hero"><div class="fade"></div>'
+            '<div class="brand">%s</div><p>%s</p></div>'
             % (esc(title), esc(subtitle)))
 
 
@@ -258,14 +286,15 @@ def _placeholder(label):
     return '<div class="ph">%s</div>' % esc(letter)
 
 
-def _card(href, label, thumb, sub='', badge=''):
+def _card(href, label, thumb, sub='', badge='', idx=0):
     cls = 'card' + (' badge" data-badge="%s' % esc(badge) if badge else '')
     img = ('<img loading="lazy" src="%s" alt="" onerror="this.remove()">'
            % esc(thumb)) if thumb else ''
     sub_html = '<span class="s">%s</span>' % esc(sub) if sub else ''
-    return ('<a class="%s" href="%s">%s%s<div class="ov">'
+    return ('<a class="%s" style="--i:%d" href="%s">%s%s<div class="ov">'
             '<div class="t">%s</div>%s</div></a>'
-            % (cls, esc(href), _placeholder(label), img, esc(label), sub_html))
+            % (cls, idx, esc(href), _placeholder(label), img, esc(label),
+               sub_html))
 
 
 def _row(href, label, badge='', icon='&#8250;', muted=False):
@@ -293,9 +322,8 @@ def render_items(base_path, data, site, back=None, next_url=None,
         out.append('<div class="empty">Aucun r&eacute;sultat.</div>')
     if not data['ok'] and not data['items']:
         out.append('<div class="msg err">Erreur du site (voir /debug).</div>')
-
     out.append('<div class="grid">')
-    for it in data['items']:
+    for idx, it in enumerate(data['items']):
         kind = it.get('kind')
         thumb = it.get('thumb') or ''
         if not (thumb.startswith('http://') or thumb.startswith('https://')
@@ -318,7 +346,7 @@ def render_items(base_path, data, site, back=None, next_url=None,
             hoster = it.get('hoster', '')
             if thumb:
                 out.append(_card('%s/play?%s' % (base_path, qs), label,
-                                 thumb, sub=hoster))
+                                 thumb, sub=hoster, idx=idx))
             else:
                 out.append(_row('%s/play?%s' % (base_path, qs), label,
                                 badge=hoster, icon='&#9654;'))
@@ -336,7 +364,8 @@ def render_items(base_path, data, site, back=None, next_url=None,
             href += '&' + qs
         badge = {'episode': 'EP', 'season': 'SAISON', 'next': 'SUIVANT'}.get(kind, '')
         if thumb:
-            out.append(_card(href, it.get('label'), thumb, badge=badge))
+            out.append(_card(href, it.get('label'), thumb, badge=badge,
+                             idx=idx))
         else:
             out.append(_row(href, it.get('label'), badge=badge))
     out.append('</div>')
