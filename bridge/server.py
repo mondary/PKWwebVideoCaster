@@ -128,23 +128,27 @@ class Handler(BaseHTTPRequestHandler):
                ' selected' if s['id'] == cur else '',
                render.esc(s['label']))
             for s in sites)
-        parts = ['<form method="get" action="/search">',
+        parts = [render.hero('PKWwebVideoCaster',
+                             'Cast vStream vers Web Video Caster, sans Kodi'),
+                 '<form class="search" method="get" action="/search">',
                  '<select name="site">%s</select>' % options,
-                 '<input type="text" name="q" placeholder="Titre, s&eacute;rie, anime&hellip;">',
-                 '<button type="submit">Rechercher</button></form>',
-                 '<p><a href="/nav?site=%s&function=showMenuMovies">Catalogue Films &amp; s&eacute;ries'
-                 ' (French-Stream / fs16.lol) &#8594;</a></p>'
-                 % urllib.parse.quote('french_stream')]
-
-        parts.append('<p></p><ul class="list">')
+                 '<input type="text" name="q" '
+                 'placeholder="Titre, s&eacute;rie, anime&hellip;">',
+                 '<button type="submit">OK</button></form>',
+                 '<p class="section">Catalogue principal</p>',
+                 '<div class="rail"><a class="chip main" '
+                 'href="/nav?site=%s&function=showMenuMovies">'
+                 'Films &amp; s&eacute;ries &#183; fs16.lol &#8594;</a></div>'
+                 % urllib.parse.quote('french_stream'),
+                 '<p class="section">Autres sources</p>',
+                 '<div class="rail">']
         for s in sites:
             if s['id'] == 'french_stream':
                 continue
-            parts.append('<li><a href="/nav?site=%s&function=load">'
-                         '<span class="t">%s</span></a></li>'
+            parts.append('<a class="chip" href="/nav?site=%s&function=load">%s</a>'
                          % (urllib.parse.quote(s['id']), render.esc(s['label'])))
-        parts.append('</ul>')
-        self._send(200, render.page('PKWwebVideoCaster', ''.join(parts)))
+        parts.append('</div>')
+        self._send(200, render.page('PKWwebVideoCaster', ''.join(parts), hero=True))
 
     def _nav(self, q):
         site = q.get('site') or 'french_stream'
