@@ -1,0 +1,15 @@
+# Dépendance upstream clonée localement
+/venom/
+
+# Artefacts binaires locaux
+/obscura
+/obscura-worker
+/obscura-aarch64-macos.tar.gz
+
+# Réglages et fichiers générés localement
+/.vscode/
+.DS_Store
+__pycache__/
+*.py[cod]
+*.pyo
+*.db
