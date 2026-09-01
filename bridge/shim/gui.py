@@ -51,7 +51,8 @@ class cGui(object):
                   sDesc='', oOutputParameterHandler=cOutputParameterHandler(),
                   sMeta=0, sCat=None):
         return self._addItem({
-            'kind': 'dir', 'cat': Type, 'site': sId, 'function': sFunction,
+            'kind': Type or 'dir', 'cat': Type, 'site': sId,
+            'function': sFunction,
             'label': _strip_color(sLabel), 'thumb': sThumbnail or sIcon or '',
             'desc': sDesc or '', 'params': _params(oOutputParameterHandler),
         })

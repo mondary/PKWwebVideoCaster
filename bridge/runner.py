@@ -11,7 +11,8 @@ from bridge import shimstate
 from bridge.boot import setup
 
 # params réservés au bridge, jamais transmis au code vStream
-BRIDGE_PARAMS = ('site', 'function', 'keyboard', 'page', 'back')
+BRIDGE_PARAMS = ('site', 'function', 'keyboard', 'page', 'back',
+                 'pages', 'fragment')
 
 _site_modules = {}
 

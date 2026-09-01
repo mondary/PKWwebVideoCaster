@@ -4,7 +4,8 @@
 # Artefacts binaires locaux
 /obscura
 /obscura-worker
-/obscura-aarch64-macos.tar.gz
+.DS_Store
+status_cache.json
 
 # Réglages et fichiers générés localement
 /.vscode/

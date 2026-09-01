@@ -119,47 +119,88 @@ class Handler(BaseHTTPRequestHandler):
 
     def _home(self):
         from bridge.boot import site_manager
+        from bridge import health
         sites = site_manager().listActive()
-        cur = self._query().get('site', 'french_stream')
-        # recherche générique : chaque source avec URL_SEARCH (protocole vStream)
-        options = ''.join(
-            '<option value="%s"%s>%s</option>'
-            % (render.esc(s['id']),
-               ' selected' if s['id'] == cur else '',
-               render.esc(s['label']))
-            for s in sites)
+        if self._query().get('refresh'):
+            health.refresh(sites)
+        else:
+            health.ensure_fresh(sites)
+        statuses = {s['id']: health.get(s['id']) for s in sites}
+        # recherche générique : protocole vStream, source principale par défaut
         parts = [render.hero('PKWwebVideoCaster',
                              'Cast vStream vers Web Video Caster, sans Kodi'),
                  '<form class="search" method="get" action="/search">',
-                 '<select name="site">%s</select>' % options,
+                 '<input type="hidden" name="site" value="french_stream">',
                  '<input type="text" name="q" '
-                 'placeholder="Titre, s&eacute;rie, anime&hellip;">',
+                 'placeholder="Rechercher un film, une s&eacute;rie&hellip;">',
                  '<button type="submit">OK</button></form>',
                  '<p class="section">Catalogue principal</p>',
-                 '<div class="rail"><a class="chip main" '
-                 'href="/nav?site=%s&function=showMenuMovies">'
-                 'Films &amp; s&eacute;ries &#183; fs16.lol &#8594;</a></div>'
-                 % urllib.parse.quote('french_stream'),
-                 '<p class="section">Autres sources</p>',
-                 '<div class="rail">']
-        for s in sites:
-            if s['id'] == 'french_stream':
-                continue
-            parts.append('<a class="chip" href="/nav?site=%s&function=load">%s</a>'
-                         % (urllib.parse.quote(s['id']), render.esc(s['label'])))
-        parts.append('</div>')
+                 '<div class="gborder" style="margin:0 16px 6px">'
+                 '<a href="/nav?site=french_stream&function=showMenuMovies'
+                 '&pages=6">Films &amp; s&eacute;ries &#183; fs16.lol &#8594;</a>'
+                 '</div>',
+                 '<p class="section">Autres sources '
+                 '<a href="/?refresh=1">&#8635; rev&eacute;rifier</a></p>',
+                 render.render_sources(
+                     [s for s in sites if s['id'] != 'french_stream'],
+                     statuses)]
         self._send(200, render.page('PKWwebVideoCaster', ''.join(parts), hero=True))
 
     def _nav(self, q):
         site = q.get('site') or 'french_stream'
         function = q.get('function') or 'load'
-        result = runner.call_site(site, function, params=q,
-                                  keyboard=q.get('keyboard', ''),
-                                  page=q.get('page'))
-        body = render.render_items('', result, site, back=self._current_path())
+        fragment = q.get('fragment') == '1'
+        try:
+            pages = min(max(int(q.get('pages') or 1), 1), 6)
+        except ValueError:
+            pages = 1
+
+        # Pagination vStream : la page suivante est un item 'next' portant un
+        # siteUrl (ex: films/page/2/), pas un numéro de page. Pour fusionner N
+        # pages on suit ces items ; les cartes 'next' sont retirées de la
+        # grille (le scroll infini prend le relais).
+        items, msgs, errs, ok_all = [], [], [], True
+        current = dict(q)
+        last_next = None
+        for i in range(pages):
+            result = runner.call_site(site, function, params=current,
+                                      keyboard=q.get('keyboard', ''))
+            last_next = next(
+                (it for it in result['items'] if it.get('kind') == 'next'),
+                None)
+            keep = [it for it in result['items']
+                    if it.get('kind') != 'next' or (pages == 1 and not fragment)]
+            items.extend(keep)
+            msgs.extend(result['messages'])
+            errs.extend(result['errors'])
+            ok_all = ok_all and result['ok']
+            if i == pages - 1 or not last_next:
+                break
+            current = dict(q)
+            current.update(last_next.get('params') or {})
+        data = {'ok': ok_all, 'items': items,
+                'messages': msgs, 'errors': errs}
+
         fallback = '/' if function == 'load' else (
             '/nav?site=%s&function=load' % urllib.parse.quote(site))
         back = self._local_path(q.get('back')) or fallback
+
+        # page suivante pour le scroll infini
+        next_url = None
+        if last_next:
+            nxt_q = {'site': site, 'fragment': '1', 'back': back}
+            if last_next.get('function'):
+                nxt_q['function'] = last_next['function']
+            nxt_q.update(last_next.get('params') or {})
+            next_url = '/nav?' + urllib.parse.urlencode(nxt_q, doseq=True)
+
+        if fragment:
+            self._send(200, render.render_items(
+                '', data, site, back=back, next_url=next_url,
+                with_script=False))
+            return
+        body = render.render_items('', data, site, back=back,
+                                   next_url=next_url)
         self._send(200, render.page(
             '%s · %s' % (site, function), body, back=back))
 
